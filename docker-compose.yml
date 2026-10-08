@@ -1,0 +1,26 @@
+# 실습 타겟(server.py)을 격리된 컨테이너 안에서 띄운다.
+# 호스트(네 노트북)의 파일 시스템/프로세스와는 분리되고, 8000번 포트만
+# 로컬(127.0.0.1)에 열린다 - 인터넷에 공개되는 게 아니라 네 컴퓨터 안에서만 접근 가능.
+#
+# 사용법:
+#   1) .env.example 을 .env 로 복사하고 API 키 채우기
+#   2) docker compose up --build
+#   3) (다른 터미널, 호스트에서) attacks/runner.py 나 promptfoo로 http://127.0.0.1:8000 공격
+#
+# 방어 버전으로 바꾸려면: .env 에서 REDTEAM_DEFENSE=on 으로 바꾸고
+#   docker compose up --build 다시 실행 (컨테이너만 재시작, 컴퓨터 전체엔 영향 없음)
+
+services:
+  redteam-target:
+    build: .
+    container_name: redteam-lab-target
+    ports:
+      - "127.0.0.1:8000:8000"   # 로컬에서만 접근 가능 (0.0.0.0으로 바꾸면 네트워크에 노출되니 주의)
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - REDTEAM_DEFENSE=${REDTEAM_DEFENSE:-off}
+      - REDTEAM_MODEL=${REDTEAM_MODEL:-claude-sonnet-5}
+    volumes:
+      # documents/ 를 수정하면 컨테이너 재빌드 없이 바로 반영되게
+      - ./documents:/app/documents:ro
+    restart: unless-stopped

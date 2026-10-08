@@ -1,0 +1,20 @@
+
+# API keys
+.env*
+!.env.example
+
+# Installed packages and caches
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+
+# Backups and logs
+*.bak
+*.log
+
+# Generated tests and evaluation results
+/promptfoo/redteam*.yaml
+/promptfoo/results*
+/promptfoo/generated/

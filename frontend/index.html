@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<title>RedTeam Lab - 대학 정보 챗봇 (실습용)</title>
+<style>
+  body { font-family: -apple-system, sans-serif; max-width: 720px; margin: 40px auto; padding: 0 16px; }
+  #log { border: 1px solid #ddd; border-radius: 8px; padding: 12px; height: 420px; overflow-y: auto; margin-bottom: 12px; }
+  .msg { margin: 8px 0; padding: 8px 12px; border-radius: 8px; white-space: pre-wrap; }
+  .user { background: #e8f0fe; text-align: right; }
+  .bot { background: #f1f1f1; }
+  .meta { font-size: 12px; color: #888; margin-top: 4px; }
+  input, button { font-size: 14px; padding: 8px; }
+  #server, #msg { width: 100%; box-sizing: border-box; margin-bottom: 8px; }
+  #status { font-size: 13px; color: #555; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+<h2>RedTeam Lab - 실습용 대학 정보 챗봇</h2>
+<p>자체 구축한 <code>server.py</code> 를 실행한 뒤, 아래 서버 주소로 대화하며
+Prompt Injection / Jailbreak 를 직접 손으로도 시도해볼 수 있는 화면입니다.</p>
+
+<input id="server" value="http://127.0.0.1:8000" />
+<div id="status">서버 상태 확인 중...</div>
+<div id="log"></div>
+<input id="msg" placeholder="메시지를 입력하세요 (Enter로 전송)" />
+<label><input type="checkbox" id="useRag" /> RAG 사용 (교환학생 공지 검색 - Indirect Injection 실습용)</label>
+<br /><br />
+<button onclick="resetSession()">세션 초기화</button>
+
+<script>
+let sessionId = null;
+
+async function checkStatus() {
+  try {
+    const base = document.getElementById('server').value;
+    const r = await fetch(base + '/health');
+    const d = await r.json();
+    document.getElementById('status').innerText =
+      `서버 연결됨 | 방어모드: ${d.defense_mode ? 'ON (방어 적용)' : 'OFF (취약 버전)'} | 모델: ${d.model}`;
+  } catch (e) {
+    document.getElementById('status').innerText = '서버에 연결할 수 없습니다. server.py 를 먼저 실행하세요.';
+  }
+}
+checkStatus();
+
+function appendMsg(role, text, meta) {
+  const log = document.getElementById('log');
+  const div = document.createElement('div');
+  div.className = 'msg ' + (role === 'user' ? 'user' : 'bot');
+  div.innerText = text;
+  if (meta) {
+    const m = document.createElement('div');
+    m.className = 'meta';
+    m.innerText = meta;
+    div.appendChild(m);
+  }
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+}
+
+async function send() {
+  const base = document.getElementById('server').value;
+  const input = document.getElementById('msg');
+  const useRag = document.getElementById('useRag').checked;
+  const text = input.value.trim();
+  if (!text) return;
+  appendMsg('user', text);
+  input.value = '';
+
+  const r = await fetch(base + '/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ session_id: sessionId, message: text, use_rag: useRag }),
+  });
+  const d = await r.json();
+  sessionId = d.session_id;
+  const meta = `input_filter=${d.blocked_by_input_filter} output_filter=${d.blocked_by_output_filter}`;
+  appendMsg('bot', d.reply, meta);
+}
+
+document.getElementById('msg').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') send();
+});
+
+async function resetSession() {
+  if (!sessionId) return;
+  const base = document.getElementById('server').value;
+  await fetch(base + '/reset', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ session_id: sessionId }),
+  });
+  sessionId = null;
+  document.getElementById('log').innerHTML = '';
+}
+</script>
+</body>
+</html>

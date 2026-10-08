@@ -1,0 +1,16 @@
+venv/
+__pycache__/
+*.pyc
+.env
+results.csv
+node_modules/
+promptfoo/.promptfoo/
+
+**/node_modules
+.git
+.venv
+__pycache__
+*.pyc
+.env
+.env.*
+promptfoo/results*
