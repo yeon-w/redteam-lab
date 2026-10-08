@@ -200,7 +200,7 @@ promptfoo view    # 웹 대시보드로 결과 확인 (성공/실패 + 실제 �
 
 ---
 
-# 너희 팀 관심사(Multi-turn / Indirect Injection / Tool Call)에 대한 추천
+# Multi-turn / Indirect Injection / Tool Call에 대한 추천
 
 Repello 2026 데이터, Anthropic 자체 연구, 그리고 이 코드의 구조를 종합하면:
 
