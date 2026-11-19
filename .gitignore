@@ -18,3 +18,10 @@ __pycache__/
 /promptfoo/redteam*.yaml
 /promptfoo/results*
 /promptfoo/generated/
+.env
+.env.*
+!.env.example
+node_modules/
+results*.json
+*.bak.*
+*.log
